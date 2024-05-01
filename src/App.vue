@@ -30,6 +30,7 @@ let intervalIdx = -1
  */
 const observerCallBack = ([entry], i) => {
   if(entry.isIntersecting) {
+    if(targetsToUpdate[i]) return;
     targetsToUpdate[i] = entry.target
   } else {
     delete targetsToUpdate[i]
