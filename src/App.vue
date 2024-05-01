@@ -1,4 +1,5 @@
 <template>
+  <div class="top"></div>
   <ul class="list">
     <li v-for="i of randomInteger(100, 150)" v-once class="list__item">
       <ul class="nested-list">
@@ -8,70 +9,53 @@
       </ul>
     </li>
   </ul>
+  <div class="bot"></div>
 </template>
 
 <script setup>
 import { onMounted, onUnmounted } from 'vue';
 import { randomInteger } from './utils.js'
 
-/**
- * Содержит элементы которые будут обновлены при тике
- * @type {[number]: HTMLElement}
- */
-const targetsToUpdate = {};
-/**
- * Список обсерверов (нужен для последующей очистки при размонтировании)
- * @type {IntersectionObserver[]}
- */
-const observers = []
 let intervalIdx = -1
 
-/**
- * Добавляет/удаляет элементы из потенциально обновляемых
- * @param {[IntersectionObserverEntry]} entry
- * @param {number} i
- */
-const observerCallBack = ([entry], i) => {
-  if(entry.isIntersecting) {
-    if(targetsToUpdate[i]) return;
-    targetsToUpdate[i] = entry.target
-  } else {
-    delete targetsToUpdate[i]
-  }
-}
-
-/**
- * Обновляет случайные элементы при тике
- * @param {number} lineIdx
- */
-const updateOnTick = () => {
-  for (const idx in targetsToUpdate) {
-    const targetLine = targetsToUpdate[idx]
-    const nestedListItems = targetLine.children[0].children
-    const itemIdxToUpdate = randomInteger(0, nestedListItems.length - 1)
-    nestedListItems[itemIdxToUpdate].textContent = randomInteger(0, 10)
-  }
-}
-
 onMounted(() => {
-  const items = document.querySelectorAll('.list__item')
+  const list = document.querySelector('.list')
+  const listRect = list.getBoundingClientRect()
+  const l = list.children.length
+  const itemHeight = 100;
 
-  items.forEach((item, i) => {
-    const o = new IntersectionObserver((entries) => observerCallBack(entries, i))
-    o.observe(item)
-    observers.push(o)
-  })
+  intervalIdx = setInterval(() => {
+    // Триггер для срабатывания "сверху"
+    const offsetTop = (listRect.top - window.innerHeight) * -1
+    // Индекс элемент с которого начнется обновление
+    let startIdx = Math.ceil((listRect.top) / itemHeight) * -1
+    startIdx = startIdx >= 0 ? startIdx : 0
 
-  intervalIdx = setInterval(updateOnTick, 1000)
+    if(offsetTop < 0 || startIdx === -1 || startIdx > l - 1) return
+    // кол-во элементов на экране, которые будут обновлены
+    let itemsOnScreen = Math.round(window.innerHeight / itemHeight)
+    itemsOnScreen = l - 1 - startIdx < itemsOnScreen ? l - startIdx : itemsOnScreen
+
+    for (let index = startIdx; index < itemsOnScreen + startIdx; index++) {
+      const items = list.children[index].children[0].children
+      items[randomInteger(0, items.length - 1)].textContent  = randomInteger(0, 10)
+    }
+  }, 1000)
 })
 
 onUnmounted(() => {
-  observers.forEach((o) => o.disconnect())
   clearInterval(intervalIdx)
 })
 </script>
 
 <style>
+.top {
+  margin-top: 2200px;
+}
+.bot {
+  margin-bottom: 4300px;
+}
+
 .list {
   list-style: none;
 }
