@@ -15,16 +15,19 @@ import { onMounted, onUnmounted } from 'vue';
 import { randomInteger } from './utils.js'
 
 /**
+ * Содержит элементы которые будут обновлены при тике
  * @type {[number]: HTMLElement}
  */
 const targetsToUpdate = {};
 /**
+ * Список обсерверов (нужен для последующей очистки при размонтировании)
  * @type {IntersectionObserver[]}
  */
 const observers = []
 let intervalIdx = -1
 
 /**
+ * Добавляет/удаляет элементы из потенциально обновляемых
  * @param {[IntersectionObserverEntry]} entry
  * @param {number} i
  */
